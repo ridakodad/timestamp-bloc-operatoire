@@ -63,7 +63,7 @@ export default function LoginPage() {
           borderRadius: '20px',
           boxShadow: '0 10px 20px rgba(0,0,0,0.03)'
         }}>
-          <img src="/new-logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
         
         <h2 style={{ 

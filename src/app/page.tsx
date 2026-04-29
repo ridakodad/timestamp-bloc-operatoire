@@ -158,7 +158,7 @@ export default function Home() {
       <div className="branding-bar" style={{ justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div className="branding-logo">
-            <img src="/new-logo.png" alt="Logo" style={{width:'100%', height:'100%', objectFit:'contain'}} />
+            <img src="/logo.png" alt="Logo" style={{width:'100%', height:'100%', objectFit:'contain'}} />
           </div>
           <div className="branding-text">
             <h2>Hôpital Universitaire International Mohammed VI</h2>

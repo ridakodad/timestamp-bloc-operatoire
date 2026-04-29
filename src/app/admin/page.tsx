@@ -69,7 +69,7 @@ export default function AdminDashboard() {
     <div className="app-shell" style={{ maxWidth: '1000px' }}>
       <div className="branding-bar" style={{ justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src="/new-logo.png" alt="Logo" style={{ height: '40px' }} />
+          <img src="/logo.png" alt="Logo" style={{ height: '40px' }} />
           <div>
             <h2 style={{ fontSize: '14px', margin: 0 }}>Cockpit Direction Médicale</h2>
             <p style={{ fontSize: '10px', margin: 0, opacity: 0.6 }}>ANALYTICS GLOBALES HUIM6</p>
