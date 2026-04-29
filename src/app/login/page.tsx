@@ -24,31 +24,67 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Identifiants invalides");
+        setError("Identifiants incorrects. Veuillez réessayer.");
       } else {
         router.push("/");
         router.refresh();
       }
     } catch (err) {
-      setError("Une erreur est survenue");
+      setError("Une erreur de connexion est survenue.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="app-shell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="card" style={{ width: '100%', maxWidth: '360px', textAlign: 'center' }}>
-        <div className="branding-logo" style={{ margin: '0 auto 20px', width: '64px', height: '64px' }}>
+    <div className="app-shell" style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '100vh',
+      background: 'radial-gradient(circle at top right, #f8f9fa, #e9ecef)'
+    }}>
+      <div className="card" style={{ 
+        width: '90%', 
+        maxWidth: '400px', 
+        padding: '40px 30px',
+        textAlign: 'center',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.05)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.8)'
+      }}>
+        <div style={{ 
+          margin: '0 auto 32px', 
+          width: '80px', 
+          height: '80px',
+          background: '#fff',
+          padding: '12px',
+          borderRadius: '20px',
+          boxShadow: '0 10px 20px rgba(0,0,0,0.03)'
+        }}>
           <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
-        <h2 className="card-title" style={{ marginBottom: '8px' }}>Connexion</h2>
-        <p style={{ fontSize: '12px', color: '#8a8a8a', marginBottom: '24px', fontWeight: 600 }}>
+        
+        <h2 style={{ 
+          fontSize: '24px', 
+          fontWeight: 800, 
+          color: '#111', 
+          marginBottom: '8px',
+          letterSpacing: '-0.02em'
+        }}>
+          Bienvenue
+        </h2>
+        <p style={{ 
+          fontSize: '14px', 
+          color: '#6c757d', 
+          marginBottom: '32px', 
+          fontWeight: 500 
+        }}>
           Portail Médical HUIM6
         </p>
 
-        <form onSubmit={handleSubmit}>
-          <div className="field-group" style={{ textAlign: 'left' }}>
+        <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
+          <div className="field-group">
             <label className="field-label">Email Professionnel</label>
             <input
               type="email"
@@ -57,9 +93,11 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              style={{ background: 'rgba(0,0,0,0.02)' }}
             />
           </div>
-          <div className="field-group" style={{ textAlign: 'left', marginBottom: '24px' }}>
+          
+          <div className="field-group" style={{ marginBottom: '32px' }}>
             <label className="field-label">Mot de passe</label>
             <input
               type="password"
@@ -68,23 +106,51 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              style={{ background: 'rgba(0,0,0,0.02)' }}
             />
           </div>
 
           {error && (
-            <div style={{ background: '#fee', color: '#a6192e', padding: '10px', borderRadius: '12px', fontSize: '12px', fontWeight: 700, marginBottom: '20px' }}>
+            <div style={{ 
+              background: '#fff5f5', 
+              color: '#c53030', 
+              padding: '12px', 
+              borderRadius: '12px', 
+              fontSize: '13px', 
+              fontWeight: 600, 
+              marginBottom: '24px',
+              border: '1px solid #fed7d7'
+            }}>
               {error}
             </div>
           )}
 
-          <button type="submit" className="btn-pill btn-dark" disabled={loading}>
-            {loading ? "CONNEXION..." : "SE CONNECTER"}
+          <button 
+            type="submit" 
+            className="btn-pill btn-dark" 
+            disabled={loading}
+            style={{ 
+              width: '100%', 
+              height: '54px', 
+              fontSize: '15px', 
+              letterSpacing: '0.05em' 
+            }}
+          >
+            {loading ? "AUTHENTIFICATION..." : "SE CONNECTER"}
           </button>
         </form>
 
-        <p style={{ marginTop: '24px', fontSize: '10px', color: '#ccc', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Accès réservé au personnel médical
-        </p>
+        <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #f1f3f5' }}>
+          <p style={{ 
+            fontSize: '11px', 
+            color: '#adb5bd', 
+            fontWeight: 700, 
+            textTransform: 'uppercase', 
+            letterSpacing: '0.1em' 
+          }}>
+            Système de Suivi Sécurisé
+          </p>
+        </div>
       </div>
     </div>
   );
