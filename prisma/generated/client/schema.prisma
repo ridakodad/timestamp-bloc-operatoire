@@ -1,0 +1,25 @@
+generator client {
+  provider   = "prisma-client-js"
+  output     = "./generated/client"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Intervention {
+  id     String  @id @default(cuid())
+  title  String
+  room   String?
+  status String  @default("EN_ATTENTE") // EN_ATTENTE, EN_COURS, TERMINEE
+
+  time_entry     DateTime?
+  time_induction DateTime?
+  time_closure   DateTime?
+  time_sspi_exit DateTime?
+  time_transfer  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
