@@ -1,12 +1,12 @@
 import { sql } from '@vercel/postgres';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params; // On attend les params ici
     const body = await req.json();
     const { time_entry, time_induction, time_closure, time_sspi_exit, status } = body;
 
@@ -30,11 +30,11 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params; // On attend les params ici
     await sql`DELETE FROM interventions WHERE id = ${id}`;
     return NextResponse.json({ message: 'Deleted' });
   } catch (error) {
