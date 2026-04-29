@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
@@ -30,8 +30,19 @@ export default function Home() {
   const todayCap = today.charAt(0).toUpperCase() + today.slice(1);
 
   const fetchAll = async () => {
-    const r = await fetch('/api/interventions');
-    setInterventions(await r.json());
+    try {
+      const r = await fetch('/api/interventions');
+      const data = await r.json();
+      if (Array.isArray(data)) {
+        setInterventions(data);
+      } else {
+        console.error('API returned non-array data:', data);
+        setInterventions([]);
+      }
+    } catch (err) {
+      console.error('Fetch failed:', err);
+      setInterventions([]);
+    }
   };
 
   useEffect(() => { fetchAll(); }, []);
