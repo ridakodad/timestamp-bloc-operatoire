@@ -25,6 +25,7 @@ export default function Home() {
   const [current, setCurrent] = useState<Intervention | null>(null);
   const [form, setForm] = useState({ title: '', patient: '', room: 'Salle 1' });
   const [times, setTimes] = useState({ time_entry: '', time_induction: '', time_closure: '', time_sspi_exit: '' });
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
 
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
   const todayCap = today.charAt(0).toUpperCase() + today.slice(1);
@@ -36,11 +37,9 @@ export default function Home() {
       if (Array.isArray(data)) {
         setInterventions(data);
       } else {
-        console.error('API returned non-array data:', data);
         setInterventions([]);
       }
     } catch (err) {
-      console.error('Fetch failed:', err);
       setInterventions([]);
     }
   };
@@ -84,6 +83,12 @@ export default function Home() {
       })
     });
     if (r.ok) { await fetchAll(); setStep(3); }
+  };
+
+  const deleteOne = async (id: string) => {
+    if (!confirm('Supprimer cette intervention ?')) return;
+    const r = await fetch(`/api/interventions/${id}`, { method: 'DELETE' });
+    if (r.ok) { await fetchAll(); }
   };
 
   const fmt = (iso: string | null) =>
@@ -136,7 +141,7 @@ export default function Home() {
       </div>
 
       <nav className="nav-pill">
-        <div className={`nav-pill-item ${step === 1 ? 'active' : ''}`} onClick={() => setStep(1)}>Nouvelle</div>
+        <div className={`nav-pill-item ${step === 1 ? 'active' : ''}`} onClick={() => {setStep(1); setIsDeleteMode(false);}}>Nouvelle</div>
         <div className={`nav-pill-item ${step === 2 ? 'active' : ''} ${!current ? 'opacity-30 pointer-events-none' : ''}`} onClick={() => current && setStep(2)}>Suivi</div>
         <div className={`nav-pill-item ${step === 3 ? 'active' : ''}`} onClick={() => setStep(3)}>Historique</div>
       </nav>
@@ -218,23 +223,54 @@ export default function Home() {
           <div className="list-card">
             <div className="list-header">
               <span className="card-label" style={{marginBottom:0}}>Récapitulatif</span>
-              <button onClick={exportToExcel} className="btn-excel">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Excel
-              </button>
+              <div style={{display:'flex', gap:'8px'}}>
+                <button 
+                  onClick={() => setIsDeleteMode(!isDeleteMode)} 
+                  className={`btn-excel ${isDeleteMode ? 'bg-[#a6192e]' : 'bg-[#111]'}`}
+                  style={{padding:'8px'}}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+                  </svg>
+                </button>
+                <button onClick={exportToExcel} className="btn-excel">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Excel
+                </button>
+              </div>
             </div>
             {interventions.length === 0 && <div style={{padding:'40px', textAlign:'center', color:'#ccc', fontSize:'13px'}}>Aucun historique</div>}
             {interventions.map(i => (
               <div key={i.id} className="list-row">
-                <div><div className="row-title">{i.title}</div><div className="row-sub">{i.patient}</div></div>
-                <div style={{textAlign:'right'}}><div className="row-room">{i.room}</div><div className="row-time">{fmt(i.time_entry)} – {fmt(i.time_closure)}</div></div>
+                <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+                  {isDeleteMode && (
+                    <button 
+                      onClick={() => deleteOne(i.id)}
+                      style={{background:'#fee', color:'#a6192e', border:'none', padding:'6px', borderRadius:'8px'}}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                      </svg>
+                    </button>
+                  )}
+                  <div>
+                    <div className="row-title">{i.title}</div>
+                    <div className="row-sub">{i.patient}</div>
+                  </div>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <div className="row-room">{i.room}</div>
+                  <div className="row-time">{fmt(i.time_entry)} – {fmt(i.time_closure)}</div>
+                </div>
               </div>
             ))}
           </div>
-          <button onClick={() => setStep(1)} className="btn-pill btn-dark">+ NOUVELLE FICHE</button>
+          <button onClick={() => {setStep(1); setIsDeleteMode(false);}} className="btn-pill btn-dark">+ NOUVELLE FICHE</button>
         </>
       )}
     </div>
   );
 }
-// Force redeploy
+// Force redeploy final
