@@ -1,14 +1,23 @@
 import { sql } from '@vercel/postgres';
 import { NextResponse } from 'next/server';
 import { initDb } from '@/lib/db';
+import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // On essaie d'initialiser à chaque GET au cas où
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await initDb();
-    const { rows } = await sql`SELECT * FROM interventions ORDER BY "createdAt" DESC`;
+    const { rows } = await sql`
+      SELECT * FROM interventions 
+      WHERE "userId" = ${session.user.id} 
+      ORDER BY "createdAt" DESC
+    `;
     return NextResponse.json(rows);
   } catch (error: any) {
     console.error('API GET ERROR:', error.message);
@@ -18,11 +27,16 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { title, patient, room } = await req.json();
     
     const { rows } = await sql`
-      INSERT INTO interventions (title, patient, room)
-      VALUES (${title}, ${patient}, ${room})
+      INSERT INTO interventions (title, patient, room, "userId")
+      VALUES (${title}, ${patient}, ${room}, ${session.user.id})
       RETURNING *
     `;
     

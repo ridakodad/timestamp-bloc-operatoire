@@ -1,5 +1,6 @@
 import { sql } from '@vercel/postgres';
 import { NextResponse, NextRequest } from 'next/server';
+import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +9,12 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // On attend les params ici
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
     const body = await req.json();
     const { time_entry, time_induction, time_closure, time_sspi_exit, status } = body;
 
@@ -20,9 +26,13 @@ export async function PATCH(
         time_closure = ${time_closure},
         time_sspi_exit = ${time_sspi_exit},
         status = ${status}
-      WHERE id = ${id}
+      WHERE id = ${id} AND "userId" = ${session.user.id}
       RETURNING *
     `;
+
+    if (rows.length === 0) {
+      return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });
+    }
 
     return NextResponse.json(rows[0]);
   } catch (error) {
@@ -36,8 +46,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // On attend les params ici
-    await sql`DELETE FROM interventions WHERE id = ${id}`;
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const { rowCount } = await sql`
+      DELETE FROM interventions 
+      WHERE id = ${id} AND "userId" = ${session.user.id}
+    `;
+
+    if (rowCount === 0) {
+      return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });
+    }
+
     return NextResponse.json({ message: 'Deleted' });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });

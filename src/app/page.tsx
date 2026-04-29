@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import { signOut } from 'next-auth/react';
 
 type Intervention = {
   id: string; title: string; patient: string; room: string | null; status: string;
@@ -26,9 +27,13 @@ export default function Home() {
   const [form, setForm] = useState({ title: '', patient: '', room: 'Salle 1' });
   const [times, setTimes] = useState({ time_entry: '', time_induction: '', time_closure: '', time_sspi_exit: '' });
   const [isDeleteMode, setIsDeleteMode] = useState(false);
+  
+  // Calendrier & Filtre
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [showCalendar, setShowCalendar] = useState(false);
 
-  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-  const todayCap = today.charAt(0).toUpperCase() + today.slice(1);
+  const todayStr = new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const todayCap = todayStr.charAt(0).toUpperCase() + todayStr.slice(1);
 
   const fetchAll = async () => {
     try {
@@ -68,7 +73,7 @@ export default function Home() {
   const toISO = (t: string) => {
     if (!t) return null;
     const [h, m] = t.split(':');
-    const d = new Date(); d.setHours(+h, +m, 0, 0);
+    const d = new Date(selectedDate); d.setHours(+h, +m, 0, 0);
     return d.toISOString();
   };
 
@@ -94,8 +99,12 @@ export default function Home() {
   const fmt = (iso: string | null) =>
     iso ? new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
 
+  const filteredInterventions = interventions.filter(i => 
+    new Date(i.createdAt).toISOString().split('T')[0] === selectedDate
+  );
+
   const exportToExcel = () => {
-    const data = interventions.map(i => {
+    const data = filteredInterventions.map(i => {
       const duration = i.time_entry && i.time_closure 
         ? Math.round((new Date(i.time_closure).getTime() - new Date(i.time_entry).getTime()) / 60000) 
         : null;
@@ -115,24 +124,47 @@ export default function Home() {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Interventions");
-    XLSX.writeFile(wb, `Interventions_HUIM6_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, `Interventions_${selectedDate}.xlsx`);
   };
 
-  const completed = interventions.filter(i => i.time_entry && i.time_closure);
+  const completed = filteredInterventions.filter(i => i.time_entry && i.time_closure);
   const avgOp = completed.length ? Math.round(completed.map(i => (new Date(i.time_closure!).getTime() - new Date(i.time_entry!).getTime()) / 60000).reduce((a, b) => a + b) / completed.length) : 0;
-  const withInd = interventions.filter(i => i.time_entry && i.time_induction);
+  const withInd = filteredInterventions.filter(i => i.time_entry && i.time_induction);
   const avgInd = withInd.length ? Math.round(withInd.map(i => (new Date(i.time_induction!).getTime() - new Date(i.time_entry!).getTime()) / 60000).reduce((a, b) => a + b) / withInd.length) : 0;
 
   return (
     <div className="app-shell">
-      <div className="branding-bar">
-        <div className="branding-logo">
-          <img src="/logo.png" alt="Logo" style={{width:'100%', height:'100%', objectFit:'contain'}} />
+      {/* Calendar Modal */}
+      {showCalendar && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setShowCalendar(false)}>
+          <div className="card" style={{ width: '100%', maxWidth: '340px' }} onClick={e => e.stopPropagation()}>
+            <h3 className="card-title" style={{ fontSize: '18px', marginBottom: '16px' }}>Choisir une date</h3>
+            <input 
+              type="date" 
+              className="field-input" 
+              value={selectedDate} 
+              onChange={e => { setSelectedDate(e.target.value); setShowCalendar(false); }}
+              style={{ marginBottom: '16px' }}
+            />
+            <button className="btn-pill btn-dark" onClick={() => setShowCalendar(false)}>FERMER</button>
+          </div>
         </div>
-        <div className="branding-text">
-          <h2>Hôpital Universitaire International Mohammed VI</h2>
-          <p>RABAT - BLOC OPÉRATOIRE</p>
+      )}
+
+      {/* Branding Header */}
+      <div className="branding-bar" style={{ justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="branding-logo">
+            <img src="/logo.png" alt="Logo" style={{width:'100%', height:'100%', objectFit:'contain'}} />
+          </div>
+          <div className="branding-text">
+            <h2>Hôpital Universitaire International Mohammed VI</h2>
+            <p>RABAT - BLOC OPÉRATOIRE</p>
+          </div>
         </div>
+        <button onClick={() => signOut()} style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.6 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
       </div>
 
       <div className="app-header">
@@ -215,14 +247,19 @@ export default function Home() {
       {step === 3 && (
         <>
           <div className="stat-row">
-            <div className="stat-box"><div className="val">{interventions.length}</div><div className="key">Actes</div></div>
+            <div className="stat-box"><div className="val">{filteredInterventions.length}</div><div className="key">Actes</div></div>
             <div className="stat-box"><div className="val">{avgOp}m</div><div className="key">Opératoire</div></div>
             <div className="stat-box"><div className="val">{avgInd}m</div><div className="key">Induction</div></div>
           </div>
 
           <div className="list-card">
             <div className="list-header">
-              <span className="card-label" style={{marginBottom:0}}>Récapitulatif</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="card-label" style={{marginBottom:0}}>Récapitulatif</span>
+                <button onClick={() => setShowCalendar(true)} style={{ background: '#f8f9fa', border: 'none', padding: '6px 12px', borderRadius: '100px', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}>
+                  📅 {selectedDate.split('-').reverse().join('/')}
+                </button>
+              </div>
               <div style={{display:'flex', gap:'8px'}}>
                 <button 
                   onClick={() => setIsDeleteMode(!isDeleteMode)} 
@@ -241,8 +278,8 @@ export default function Home() {
                 </button>
               </div>
             </div>
-            {interventions.length === 0 && <div style={{padding:'40px', textAlign:'center', color:'#ccc', fontSize:'13px'}}>Aucun historique</div>}
-            {interventions.map(i => (
+            {filteredInterventions.length === 0 && <div style={{padding:'40px', textAlign:'center', color:'#ccc', fontSize:'13px'}}>Aucun historique pour cette date</div>}
+            {filteredInterventions.map(i => (
               <div key={i.id} className="list-row">
                 <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
                   {isDeleteMode && (
@@ -273,4 +310,3 @@ export default function Home() {
     </div>
   );
 }
-// Force redeploy final
