@@ -13,10 +13,10 @@ type Intervention = {
 const ROOMS = [...Array.from({ length: 20 }, (_, i) => `Salle ${i + 1}`), "Salle ROBOT"];
 
 const SUGGESTIONS = [
-  "Appendicectomie", "CholÃ©cystectomie", "Hernie inguinale", "Prostatectomie",
-  "Cystectomie", "NÃ©phrectomie", "Arthroplastie Hanche", "Arthroplastie Genou",
-  "Coelioscopie", "Laparotomie", "ThyroÃ¯dectomie", "Mastectomie",
-  "Cataracte", "Amygdalectomie", "CÃ©sarienne", "OstÃ©osynthÃ¨se"
+  "Appendicectomie", "Cholécystectomie", "Hernie inguinale", "Prostatectomie",
+  "Cystectomie", "Néphrectomie", "Arthroplastie Hanche", "Arthroplastie Genou",
+  "Coelioscopie", "Laparotomie", "Thyroïdectomie", "Mastectomie",
+  "Cataracte", "Amygdalectomie", "Césarienne", "Ostéosynthèse"
 ];
 
 export default function Home() {
@@ -100,9 +100,9 @@ export default function Home() {
 
       return {
         'Intervention': i.title, 'Patient': i.patient, 'Salle': i.room,
-        'EntrÃ©e Salle': fmt(i.time_entry), 'Induction': fmt(i.time_induction),
+        'Entrée Salle': fmt(i.time_entry), 'Induction': fmt(i.time_induction),
         'Fermeture': fmt(i.time_closure), 'Sortie SSPI': fmt(i.time_sspi_exit),
-        'DurÃ©e Op. (min)': duration, 'DÃ©lai Induction (min)': inductionDelay,
+        'Durée Op. (min)': duration, 'Délai Induction (min)': inductionDelay,
         'Date': new Date(i.createdAt).toLocaleDateString('fr-FR')
       };
     });
@@ -120,14 +120,13 @@ export default function Home() {
 
   return (
     <div className="app-shell">
-      {/* Branding Header */}
       <div className="branding-bar">
         <div className="branding-logo">
           <img src="/logo.png" alt="Logo" style={{width:'100%', height:'100%', objectFit:'contain'}} />
         </div>
         <div className="branding-text">
-          <h2>HÃ´pital Universitaire International Mohammed VI</h2>
-          <p>RABAT - BLOC OPÃ‰RATOIRE</p>
+          <h2>Hôpital Universitaire International Mohammed VI</h2>
+          <p>RABAT - BLOC OPÉRATOIRE</p>
         </div>
       </div>
 
@@ -144,7 +143,7 @@ export default function Home() {
 
       {step === 1 && (
         <div className="card">
-          <p className="card-label">Saisie des donnÃ©es</p>
+          <p className="card-label">Saisie des données</p>
           <h2 className="card-title" style={{marginBottom:'24px'}}>Nouvelle Fiche</h2>
 
           <form onSubmit={handleCreate}>
@@ -164,15 +163,15 @@ export default function Home() {
             </div>
             <div className="field-group">
               <label className="field-label">Patient</label>
-              <input className="field-input" placeholder="Nom et PrÃ©nom" value={form.patient} onChange={e => setForm({ ...form, patient: e.target.value })} required />
+              <input className="field-input" placeholder="Nom et Prénom" value={form.patient} onChange={e => setForm({ ...form, patient: e.target.value })} required />
             </div>
             <div className="field-group" style={{marginBottom:'24px'}}>
-              <label className="field-label">Salle (SÃ©lection tactile)</label>
+              <label className="field-label">Salle (Sélection tactile)</label>
               <select className="field-input" value={form.room} onChange={e => setForm({ ...form, room: e.target.value })}>
                 {ROOMS.map(r => <option key={r}>{r}</option>)}
               </select>
             </div>
-            <button type="submit" className="btn-pill btn-dark">INITIALISER LE SUIVI  â†’</button>
+            <button type="submit" className="btn-pill btn-dark">INITIALISER LE SUIVI →</button>
           </form>
         </div>
       )}
@@ -192,7 +191,7 @@ export default function Home() {
 
           <div className="time-grid">
             {([
-              { key: 'time_entry', label: 'EntrÃ©e Salle' },
+              { key: 'time_entry', label: 'Entrée Salle' },
               { key: 'time_induction', label: 'Induction' },
               { key: 'time_closure', label: 'Fermeture' },
               { key: 'time_sspi_exit', label: 'Sortie SSPI' },
@@ -204,7 +203,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <button onClick={save} className="btn-pill btn-red">CLÃ”TURER & SAUVEGARDER</button>
+          <button onClick={save} className="btn-pill btn-red">CLÔTURER & SAUVEGARDER</button>
         </>
       )}
 
@@ -212,13 +211,13 @@ export default function Home() {
         <>
           <div className="stat-row">
             <div className="stat-box"><div className="val">{interventions.length}</div><div className="key">Actes</div></div>
-            <div className="stat-box"><div className="val">{avgOp}m</div><div className="key">OpÃ©ratoire</div></div>
+            <div className="stat-box"><div className="val">{avgOp}m</div><div className="key">Opératoire</div></div>
             <div className="stat-box"><div className="val">{avgInd}m</div><div className="key">Induction</div></div>
           </div>
 
           <div className="list-card">
             <div className="list-header">
-              <span className="card-label" style={{marginBottom:0}}>RÃ©capitulatif</span>
+              <span className="card-label" style={{marginBottom:0}}>Récapitulatif</span>
               <button onClick={exportToExcel} className="btn-excel">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Excel
@@ -228,7 +227,7 @@ export default function Home() {
             {interventions.map(i => (
               <div key={i.id} className="list-row">
                 <div><div className="row-title">{i.title}</div><div className="row-sub">{i.patient}</div></div>
-                <div style={{textAlign:'right'}}><div className="row-room">{i.room}</div><div className="row-time">{fmt(i.time_entry)} â€“ {fmt(i.time_closure)}</div></div>
+                <div style={{textAlign:'right'}}><div className="row-room">{i.room}</div><div className="row-time">{fmt(i.time_entry)} – {fmt(i.time_closure)}</div></div>
               </div>
             ))}
           </div>
@@ -238,3 +237,4 @@ export default function Home() {
     </div>
   );
 }
+// Force redeploy
