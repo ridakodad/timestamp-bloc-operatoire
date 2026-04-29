@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 type Intervention = {
   id: string; title: string; patient: string; room: string | null; status: string;
@@ -132,6 +133,8 @@ export default function Home() {
   const withInd = filteredInterventions.filter(i => i.time_entry && i.time_induction);
   const avgInd = withInd.length ? Math.round(withInd.map(i => (new Date(i.time_induction!).getTime() - new Date(i.time_entry!).getTime()) / 60000).reduce((a, b) => a + b) / withInd.length) : 0;
 
+  const { data: session } = useSession();
+
   return (
     <div className="app-shell">
       {/* Calendar Modal */}
@@ -155,16 +158,23 @@ export default function Home() {
       <div className="branding-bar" style={{ justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div className="branding-logo">
-            <img src="/logo.png" alt="Logo" style={{width:'100%', height:'100%', objectFit:'contain'}} />
+            <img src="/new-logo.png" alt="Logo" style={{width:'100%', height:'100%', objectFit:'contain'}} />
           </div>
           <div className="branding-text">
             <h2>Hôpital Universitaire International Mohammed VI</h2>
             <p>RABAT - BLOC OPÉRATOIRE</p>
           </div>
         </div>
-        <button onClick={() => signOut()} style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.6 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        </button>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          {session?.user?.email === 'admin@huim6.ma' && (
+            <Link href="/admin" style={{ fontSize: '11px', fontWeight: 800, color: '#1e4d2b', textDecoration: 'none', background: '#f0f5f1', padding: '6px 12px', borderRadius: '100px' }}>
+              COCKPIT ADMIN
+            </Link>
+          )}
+          <button onClick={() => signOut()} style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.6 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
       </div>
 
       <div className="app-header">
@@ -257,7 +267,7 @@ export default function Home() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="card-label" style={{marginBottom:0}}>Récapitulatif</span>
                 <button onClick={() => setShowCalendar(true)} style={{ background: '#f8f9fa', border: 'none', padding: '6px 12px', borderRadius: '100px', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}>
-                  📅 {selectedDate.split('-').reverse().join('/')}
+                  {selectedDate.split('-').reverse().join('/')}
                 </button>
               </div>
               <div style={{display:'flex', gap:'8px'}}>
