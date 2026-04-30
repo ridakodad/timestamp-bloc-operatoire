@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
+import { 
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid,
+  PieChart, Pie, Legend
+} from 'recharts';
 import * as XLSX from 'xlsx';
 
 type AdminIntervention = {
@@ -12,6 +15,8 @@ type AdminIntervention = {
   time_closure: string; time_recovery: string; time_exit: string;
   createdAt: string; userName: string;
 };
+
+const COLORS = ['#1e4d2b', '#2a6b3d', '#a6192e'];
 
 export default function AdminDashboard() {
   const { data: session } = useSession();
@@ -30,7 +35,6 @@ export default function AdminDashboard() {
     return <div style={{ padding: '40px', textAlign: 'center' }}>Accès réservé à l'administrateur.</div>;
   }
 
-  // CALCULS KPIs
   const calcMin = (start: string, end: string) => {
     if (!start || !end) return null;
     const diff = new Date(end).getTime() - new Date(start).getTime();
@@ -53,7 +57,13 @@ export default function AdminDashboard() {
   const globalAvgInd = avg(stats.map(s => s.durInd));
   const globalAvgExit = avg(stats.map(s => s.durExit));
 
-  // Répartition par service
+  // Data pour le Donut Chart de répartition
+  const distributionData = [
+    { name: 'Chirurgie', value: globalAvgOp },
+    { name: 'Induction', value: globalAvgInd },
+    { name: 'Sortie', value: globalAvgExit },
+  ];
+
   const byService = data.reduce((acc: any, curr) => {
     const s = curr.userName || 'Inconnu';
     acc[s] = (acc[s] || 0) + 1;
@@ -61,17 +71,6 @@ export default function AdminDashboard() {
   }, {});
   
   const chartService = Object.keys(byService).map(k => ({ name: k, value: byService[k] }));
-
-  // Durées par service
-  const durByService = Object.keys(byService).map(service => {
-    const serviceData = stats.filter(s => s.userName === service);
-    return {
-      name: service,
-      "Chirurgie": avg(serviceData.map(s => s.durOp)),
-      "Induction": avg(serviceData.map(s => s.durInd)),
-      "Sortie": avg(serviceData.map(s => s.durExit))
-    };
-  });
 
   const exportAll = () => {
     const exportData = stats.map(s => ({
@@ -98,7 +97,6 @@ export default function AdminDashboard() {
         <Link href="/" className="btn-cockpit">RETOUR DASHBOARD</Link>
       </div>
 
-      {/* Global Scores */}
       <div className="stat-row" style={{ marginTop: '24px', gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <div className="stat-box"><div className="val" style={{color:'#111'}}>{data.length}</div><div className="key">Total Actes</div></div>
         <div className="stat-box"><div className="val" style={{color:'#1e4d2b'}}>{globalAvgOp}m</div><div className="key">Moy. Chirurgie</div></div>
@@ -110,7 +108,7 @@ export default function AdminDashboard() {
         {/* Chart 1: Volume */}
         <div className="card">
           <h3 className="card-label" style={{marginBottom:'16px'}}>Volume par Spécialité</h3>
-          <div style={{ width: '100%', height: '220px' }}>
+          <div style={{ width: '100%', height: '280px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartService}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -123,20 +121,29 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Chart 2: Durées */}
+        {/* Chart 2: Répartition Donut */}
         <div className="card">
-          <h3 className="card-label" style={{marginBottom:'16px'}}>Efficience par Service (min)</h3>
-          <div style={{ width: '100%', height: '220px' }}>
+          <h3 className="card-label" style={{marginBottom:'16px'}}>Répartition du Temps Moyen</h3>
+          <div style={{ width: '100%', height: '280px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={durByService}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
-                <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
-                <Bar dataKey="Chirurgie" fill="#1e4d2b" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Induction" fill="#2a6b3d" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Sortie" fill="#a6192e" radius={[4, 4, 0, 0]} />
-              </BarChart>
+              <PieChart>
+                <Pie
+                  data={distributionData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {distributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                <Legend iconType="circle" />
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -144,7 +151,7 @@ export default function AdminDashboard() {
 
       <div className="list-card" style={{ marginTop: '20px' }}>
         <div className="list-header">
-          <span className="card-label">Flux de données global</span>
+          <span className="card-label">Journal des interventions</span>
           <button onClick={exportAll} className="btn-excel">📥 EXPORT ANALYTIQUE</button>
         </div>
         <div style={{ overflowX: 'auto' }}>
