@@ -17,15 +17,17 @@ export async function initDb() {
     await sql`
       CREATE TABLE IF NOT EXISTS interventions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        "userId" UUID REFERENCES users(id),
         title TEXT NOT NULL,
         patient TEXT NOT NULL,
         room TEXT,
         status TEXT DEFAULT 'EN_COURS',
+        time_reception TIMESTAMP WITH TIME ZONE,
         time_entry TIMESTAMP WITH TIME ZONE,
         time_induction TIMESTAMP WITH TIME ZONE,
         time_closure TIMESTAMP WITH TIME ZONE,
-        time_sspi_exit TIMESTAMP WITH TIME ZONE,
+        time_recovery TIMESTAMP WITH TIME ZONE,
+        time_exit TIMESTAMP WITH TIME ZONE,
+        "userId" UUID REFERENCES users(id),
         "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
@@ -33,8 +35,11 @@ export async function initDb() {
     // Vérifier si la colonne userId existe (si la table existait déjà)
     try {
       await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS "userId" UUID REFERENCES users(id)`;
+      await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS time_reception TIMESTAMP WITH TIME ZONE`;
+      await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS time_recovery TIMESTAMP WITH TIME ZONE`;
+      await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS time_exit TIMESTAMP WITH TIME ZONE`;
     } catch (e) {
-      // Ignorer si la colonne existe déjà
+      // Ignorer si les colonnes existent déjà
     }
 
     return true;

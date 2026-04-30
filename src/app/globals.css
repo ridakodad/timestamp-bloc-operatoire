@@ -290,6 +290,22 @@ select.field-input {
   margin-bottom: 16px;
 }
 
+.btn-cockpit {
+  font-size: 10px;
+  font-weight: 800;
+  color: #1e4d2b;
+  text-decoration: none;
+  background: #f0f5f1;
+  padding: 8px 14px;
+  border-radius: 100px;
+  transition: all 0.2s;
+}
+
+.btn-cockpit:hover {
+  background: #e2ede4;
+  transform: translateY(-1px);
+}
+
 .list-header {
   padding: 16px 20px;
   display: flex;
@@ -310,3 +326,8 @@ select.field-input {
 .row-sub { font-size: 10px; color: var(--muted); }
 .row-room { font-size: 11px; font-weight: 800; color: var(--green); }
 .row-time { font-size: 11px; font-weight: 600; color: var(--muted); }
+
+/* Grid override for 6 steps */
+.time-grid {
+  grid-template-columns: 1fr 1fr;
+}

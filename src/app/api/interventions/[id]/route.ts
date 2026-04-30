@@ -16,15 +16,21 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    const { time_entry, time_induction, time_closure, time_sspi_exit, status } = body;
+    const { 
+      time_reception, time_entry, time_induction, 
+      time_closure, time_recovery, time_exit, 
+      status 
+    } = body;
 
     const { rows } = await sql`
       UPDATE interventions
       SET 
+        time_reception = ${time_reception},
         time_entry = ${time_entry},
         time_induction = ${time_induction},
         time_closure = ${time_closure},
-        time_sspi_exit = ${time_sspi_exit},
+        time_recovery = ${time_recovery},
+        time_exit = ${time_exit},
         status = ${status}
       WHERE id = ${id} AND "userId" = ${session.user.id}
       RETURNING *
