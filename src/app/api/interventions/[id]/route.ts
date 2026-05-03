@@ -25,14 +25,14 @@ export async function PATCH(
     const { rows } = await sql`
       UPDATE interventions
       SET 
-        time_service_arrival = ${time_service_arrival !== undefined ? time_service_arrival : sql`time_service_arrival`},
-        time_reception = ${time_reception !== undefined ? time_reception : sql`time_reception`},
-        time_entry = ${time_entry !== undefined ? time_entry : sql`time_entry`},
-        time_induction = ${time_induction !== undefined ? time_induction : sql`time_induction`},
-        time_closure = ${time_closure !== undefined ? time_closure : sql`time_closure`},
-        time_recovery = ${time_recovery !== undefined ? time_recovery : sql`time_recovery`},
-        time_exit = ${time_exit !== undefined ? time_exit : sql`time_exit`},
-        status = ${status !== undefined ? status : sql`status`}
+        time_service_arrival = ${time_service_arrival ?? null},
+        time_reception = ${time_reception ?? null},
+        time_entry = ${time_entry ?? null},
+        time_induction = ${time_induction ?? null},
+        time_closure = ${time_closure ?? null},
+        time_recovery = ${time_recovery ?? null},
+        time_exit = ${time_exit ?? null},
+        status = ${status ?? 'EN_COURS'}
       WHERE id = ${id} AND "userId" = ${session.user.id}
       RETURNING *
     `;

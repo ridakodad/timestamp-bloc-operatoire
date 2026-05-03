@@ -114,6 +114,7 @@ export default function Home() {
     const r = await fetch(`/api/interventions/${current.id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        time_service_arrival: current.time_service_arrival,
         time_reception: toISO(times.time_reception),
         time_entry: toISO(times.time_entry),
         time_induction: toISO(times.time_induction),
