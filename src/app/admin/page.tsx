@@ -11,7 +11,8 @@ import * as XLSX from 'xlsx';
 
 type AdminIntervention = {
   id: string; title: string; patient: string; room: string; status: string;
-  time_reception: string; time_entry: string; time_induction: string; 
+  surgeon: string; anesthetist: string;
+  time_service_arrival: string; time_reception: string; time_entry: string; time_induction: string; 
   time_closure: string; time_recovery: string; time_exit: string;
   createdAt: string; userName: string;
 };
@@ -75,6 +76,7 @@ export default function AdminDashboard() {
   const exportAll = () => {
     const exportData = stats.map(s => ({
       'Service': s.userName, 'Patient': s.patient, 'Intervention': s.title,
+      'Chirurgien': s.surgeon, 'Réanimateur': s.anesthetist,
       'Durée Chir (min)': s.durOp, 'Délai Ind (min)': s.durInd, 'Délai Sortie (min)': s.durExit,
       'Date': new Date(s.createdAt).toLocaleDateString()
     }));

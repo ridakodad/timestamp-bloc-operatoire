@@ -32,11 +32,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, patient, room } = await req.json();
+    const { title, patient, room, surgeon, anesthetist, time_service_arrival } = await req.json();
     
     const { rows } = await sql`
-      INSERT INTO interventions (title, patient, room, "userId")
-      VALUES (${title}, ${patient}, ${room}, ${session.user.id})
+      INSERT INTO interventions (title, patient, room, surgeon, anesthetist, time_service_arrival, "userId")
+      VALUES (${title}, ${patient}, ${room}, ${surgeon || null}, ${anesthetist || null}, ${time_service_arrival || null}, ${session.user.id})
       RETURNING *
     `;
     

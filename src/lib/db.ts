@@ -20,7 +20,10 @@ export async function initDb() {
         title TEXT NOT NULL,
         patient TEXT NOT NULL,
         room TEXT,
+        surgeon TEXT,
+        anesthetist TEXT,
         status TEXT DEFAULT 'EN_COURS',
+        time_service_arrival TIMESTAMP WITH TIME ZONE,
         time_reception TIMESTAMP WITH TIME ZONE,
         time_entry TIMESTAMP WITH TIME ZONE,
         time_induction TIMESTAMP WITH TIME ZONE,
@@ -38,6 +41,9 @@ export async function initDb() {
       await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS time_reception TIMESTAMP WITH TIME ZONE`;
       await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS time_recovery TIMESTAMP WITH TIME ZONE`;
       await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS time_exit TIMESTAMP WITH TIME ZONE`;
+      await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS surgeon TEXT`;
+      await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS anesthetist TEXT`;
+      await sql`ALTER TABLE interventions ADD COLUMN IF NOT EXISTS time_service_arrival TIMESTAMP WITH TIME ZONE`;
     } catch (e) {
       // Ignorer si les colonnes existent déjà
     }

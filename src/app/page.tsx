@@ -7,8 +7,9 @@ import Link from 'next/link';
 
 type Intervention = {
   id: string; title: string; patient: string; room: string | null; status: string;
-  time_reception: string | null; time_entry: string | null; time_induction: string | null;
-  time_closure: string | null; time_recovery: string | null; time_exit: string | null;
+  surgeon: string | null; anesthetist: string | null;
+  time_service_arrival: string | null; time_reception: string | null; time_entry: string | null; 
+  time_induction: string | null; time_closure: string | null; time_recovery: string | null; time_exit: string | null;
   createdAt: string;
 };
 
@@ -21,12 +22,16 @@ const SUGGESTIONS = [
   "Cataracte", "Amygdalectomie", "Césarienne", "Ostéosynthèse"
 ];
 
+const SURGEONS = [
+  "El Sayegh Hachem", "Bouabdellah Zakaria", "Lachkar Salim"
+];
+
 export default function Home() {
   const { data: session } = useSession();
   const [step, setStep] = useState<1|2|3>(1);
   const [interventions, setInterventions] = useState<Intervention[]>([]);
   const [current, setCurrent] = useState<Intervention | null>(null);
-  const [form, setForm] = useState({ title: '', patient: '', room: 'Salle 1' });
+  const [form, setForm] = useState({ title: '', patient: '', room: 'Salle 1', surgeon: '', anesthetist: '', time_service_arrival: '' });
   const [times, setTimes] = useState({ 
     time_reception: '', time_entry: '', time_induction: '', 
     time_closure: '', time_recovery: '', time_exit: '' 
@@ -56,11 +61,19 @@ export default function Home() {
 
   useEffect(() => { fetchAll(); }, []);
 
+  const toISO = (t: string) => {
+    if (!t) return null;
+    const [h, m] = t.split(':');
+    const d = new Date(selectedDate); d.setHours(+h, +m, 0, 0);
+    return d.toISOString();
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = { ...form, time_service_arrival: toISO(form.time_service_arrival) };
     const r = await fetch('/api/interventions', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: JSON.stringify(payload)
     });
     if (r.ok) {
       const data = await r.json();
@@ -94,13 +107,6 @@ export default function Home() {
   const tap = (field: keyof typeof times) => {
     const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', hour12: false });
     setTimes(p => ({ ...p, [field]: now }));
-  };
-
-  const toISO = (t: string) => {
-    if (!t) return null;
-    const [h, m] = t.split(':');
-    const d = new Date(selectedDate); d.setHours(+h, +m, 0, 0);
-    return d.toISOString();
   };
 
   const save = async (status: 'EN_COURS' | 'TERMINEE') => {
@@ -148,7 +154,8 @@ export default function Home() {
         : null;
       return {
         'Intervention': i.title, 'Patient': i.patient, 'Salle': i.room,
-        'Accueil': fmt(i.time_reception), 'Entrée': fmt(i.time_entry),
+        'Chirurgien': i.surgeon, 'Réanimateur': i.anesthetist,
+        'Arrivée Service': fmt(i.time_service_arrival), 'Accueil Bloc': fmt(i.time_reception), 'Entrée Salle': fmt(i.time_entry),
         'Induction': fmt(i.time_induction), 'Fermeture': fmt(i.time_closure),
         'Réveil': fmt(i.time_recovery), 'Sortie': fmt(i.time_exit),
         'Durée Op. (min)': duration, 'Statut': i.status,
@@ -212,6 +219,16 @@ export default function Home() {
             <div className="field-group"><label className="field-label">Patient</label>
               <input className="field-input" placeholder="Nom et Prénom" value={form.patient} onChange={e => setForm({ ...form, patient: e.target.value })} required />
             </div>
+            <div className="field-group"><label className="field-label">Chirurgien</label>
+              <input className="field-input" list="surgeons-list" placeholder="Nom du chirurgien" value={form.surgeon} onChange={e => setForm({ ...form, surgeon: e.target.value })} />
+              <datalist id="surgeons-list">{SURGEONS.map(s => <option key={s} value={s} />)}</datalist>
+            </div>
+            <div className="field-group"><label className="field-label">Réanimateur</label>
+              <input className="field-input" placeholder="Nom du réanimateur" value={form.anesthetist} onChange={e => setForm({ ...form, anesthetist: e.target.value })} />
+            </div>
+            <div className="field-group"><label className="field-label">Heure d'arrivée au service</label>
+              <input type="time" className="field-input" value={form.time_service_arrival} onChange={e => setForm({ ...form, time_service_arrival: e.target.value })} />
+            </div>
             <div className="field-group" style={{marginBottom:'24px'}}><label className="field-label">Salle</label>
               <select className="field-input" value={form.room} onChange={e => setForm({ ...form, room: e.target.value })}>{ROOMS.map(r => <option key={r}>{r}</option>)}</select>
             </div>
@@ -224,13 +241,22 @@ export default function Home() {
         <>
           <div className="card">
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
-              <div><p className="card-label">Intervention en cours</p><h2 className="card-title">{current.title}</h2><p style={{fontSize:'13px', color:'#8a8a8a', fontWeight:600}}>{current.patient}</p></div>
+              <div>
+                <p className="card-label">Intervention en cours</p>
+                <h2 className="card-title">{current.title}</h2>
+                <p style={{fontSize:'13px', color:'#8a8a8a', fontWeight:600}}>{current.patient}</p>
+                <p style={{fontSize:'11px', color:'#a6192e', fontWeight:700, marginTop: '4px'}}>
+                  {current.surgeon && `Chir: ${current.surgeon} `}
+                  {current.anesthetist && `| Réa: ${current.anesthetist} `}
+                  {current.time_service_arrival && `| Arrivée Sce: ${fmt(current.time_service_arrival)}`}
+                </p>
+              </div>
               <span style={{background:'#f0f5f1', color:'#1e4d2b', padding:'6px 12px', borderRadius:'100px', fontSize:'11px', fontWeight:800}}>{current.room}</span>
             </div>
           </div>
           <div className="time-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
             {([
-              { key: 'time_reception', label: 'Accueil' },
+              { key: 'time_reception', label: 'Accueil Bloc' },
               { key: 'time_entry', label: 'Entrée Salle' },
               { key: 'time_induction', label: 'Induction' },
               { key: 'time_closure', label: 'Fermeture' },
